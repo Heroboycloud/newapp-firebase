@@ -1,0 +1,17 @@
+doctype strict
+html
+  head
+    script(src='https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js')
+    script(src='https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js')
+    script(src='https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js')
+  body
+    section#whenSignedOut
+      button#signInBtn Sign in with Google
+    |   
+    section#whenSignedIn(hidden='true')
+      #userDetails
+      |     
+      button#signOutBtn Sign Out
+    p welcome
+    script(src='app.js')
+
