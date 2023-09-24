@@ -1,19 +1,16 @@
-const firebaseConfig = {
-    apiKey: "AIzaSyARWfK9-KxrY12T5uhGmE_m8qXv_edM1kQ",
-    authDomain: "newapp-70d.firebaseapp.com",
-    projectId: "newapp-70d",
-    storageBucket: "newapp-70d.appspot.com",
-    messagingSenderId: "1281116569",
-    appId: "1:1281116569:web:47302e867ec252a65deb08"
-  };
+///// User Authentication /////
 
-  // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-console.log(firebase);
+const auth = firebase.auth();
+
+const whenSignedIn = document.getElementById('whenSignedIn');
+const whenSignedOut = document.getElementById('whenSignedOut');
+
 const signInBtn = document.getElementById('signInBtn');
 const signOutBtn = document.getElementById('signOutBtn');
 
-const auth = firebase.auth();
+const userDetails = document.getElementById('userDetails');
+
+
 const provider = new firebase.auth.GoogleAuthProvider();
 
 /// Sign in event handlers
@@ -21,9 +18,6 @@ const provider = new firebase.auth.GoogleAuthProvider();
 signInBtn.onclick = () => auth.signInWithPopup(provider);
 
 signOutBtn.onclick = () => auth.signOut();
-const whenSignedIn = document.getElementById('whenSignedIn');
-const whenSignedOut = document.getElementById('whenSignedOut');
-const userDetails = document.getElementById('userDetails');
 
 auth.onAuthStateChanged(user => {
     if (user) {
@@ -37,4 +31,63 @@ auth.onAuthStateChanged(user => {
         whenSignedOut.hidden = false;
         userDetails.innerHTML = '';
     }
-})
+});
+
+
+
+///// Firestore /////
+
+const db = firebase.firestore();
+
+const createThing = document.getElementById('createThing');
+const thingsList = document.getElementById('thingsList');
+
+
+let thingsRef;
+let unsubscribe;
+
+auth.onAuthStateChanged(user => {
+
+    if (user) {
+
+        // Database Reference
+        thingsRef = db.collection('things')
+
+        createThing.onclick = () => {
+
+            const { serverTimestamp } = firebase.firestore.FieldValue;
+
+            thingsRef.add({
+                uid: user.uid,
+                name: faker.commerce.productName(),
+                createdAt: serverTimestamp()
+            });
+        }
+
+
+        // Query
+        unsubscribe = thingsRef
+            .where('uid', '==', user.uid)
+            .orderBy('createdAt') // Requires a query
+            .onSnapshot(querySnapshot => {
+                
+                // Map results to an array of li elements
+
+                const items = querySnapshot.docs.map(doc => {
+
+                    return `<li>${doc.data().name}</li>`
+
+                });
+
+                thingsList.innerHTML = items.join('');
+
+            });
+
+
+
+    } else {
+        // Unsubscribe when the user signs out
+        unsubscribe && unsubscribe();
+    }
+});
+
